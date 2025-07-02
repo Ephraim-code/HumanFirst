@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - HealthCompanion</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-form">
+            <h2>Create Your Account</h2>
+            
+            <div class="form-group">
+                <label for="userType">I am a:</label>
+                <select id="userType" required onchange="toggleFields()">
+                    <option value="">Select your role</option>
+                    <option value="patient">Patient</option>
+                    <option value="counsellor">Counsellor</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" required>
+            </div>
+
+            <!-- Patient-specific fields -->
+            <div id="patientFields" style="display: none;">
+                <div class="form-group">
+                    <label for="disease">Primary Condition</label>
+                    <select id="disease" required>
+                        <option value="">Select your condition</option>
+                        <option value="cardiovascular">Cardiovascular Diseases</option>
+                        <option value="diabetes">Diabetes</option>
+                        <option value="cancer">Cancer</option>
+                        <option value="mental-health">Mental Health Disorders</option>
+                        <option value="liver">Liver Disease</option>
+                        <option value="respiratory">Chronic Respiratory Diseases</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" min="1" max="120" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="emergencyContact">Emergency Contact</label>
+                    <input type="text" id="emergencyContact" required>
+                </div>
+            </div>
+
+            <!-- Counsellor-specific fields -->
+            <div id="counsellorFields" style="display: none;">
+                <div class="form-group">
+                    <label for="specialization">Specialization</label>
+                    <select id="specialization" required>
+                        <option value="">Select your specialization</option>
+                        <option value="cardiovascular">Cardiovascular Diseases</option>
+                        <option value="diabetes">Diabetes</option>
+                        <option value="cancer">Cancer</option>
+                        <option value="mental-health">Mental Health Disorders</option>
+                        <option value="liver">Liver Disease</option>
+                        <option value="respiratory">Chronic Respiratory Diseases</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="license">License Number</label>
+                    <input type="text" id="license" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="experience">Years of Experience</label>
+                    <input type="number" id="experience" min="0" max="50" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="qualifications">Qualifications</label>
+                    <textarea id="qualifications" rows="3" required></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="signup-btn">Create Account</button>
+            </div>
+
+            <div class="auth-links">
+                <p>Already have an account? <a href="login.html">Login here</a></p>
+                <p><a href="index.html">Back to Home</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration and Sign-Up Logic -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBoq57dBjnsfsqiyhwt22fMPowrXDLhAWw",
+            authDomain: "humancompanion-67755.firebaseapp.com",
+            projectId: "humancompanion-67755",
+            storageBucket: "humancompanion-67755.firebasestorage.app",
+            messagingSenderId: "738009524000",
+            appId: "1:738009524000:web:3962d82c63ff83d023d945"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Show/hide fields based on user type
+        function toggleFields() {
+            const userType = document.getElementById('userType').value;
+            const patientFields = document.getElementById('patientFields');
+            const counsellorFields = document.getElementById('counsellorFields');
+            
+            if (userType === 'patient') {
+                patientFields.style.display = 'block';
+                counsellorFields.style.display = 'none';
+            } else if (userType === 'counsellor') {
+                patientFields.style.display = 'none';
+                counsellorFields.style.display = 'block';
+            } else {
+                patientFields.style.display = 'none';
+                counsellorFields.style.display = 'none';
+            }
+        }
+
+        // Signup functionality
+        document.getElementById('signup-btn').addEventListener('click', () => {
+            const userType = document.getElementById('userType').value;
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const phone = document.getElementById('phone').value;
+
+            // Validation
+            if (!userType || !fullName || !email || !password || !confirmPassword || !phone) {
+                alert("Please fill in all required fields!");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters long!");
+                return;
+            }
+
+            // Additional validation based on user type
+            if (userType === 'patient') {
+                const disease = document.getElementById('disease').value;
+                const age = document.getElementById('age').value;
+                const emergencyContact = document.getElementById('emergencyContact').value;
+                
+                if (!disease || !age || !emergencyContact) {
+                    alert("Please fill in all patient-specific fields!");
+                    return;
+                }
+            } else if (userType === 'counsellor') {
+                const specialization = document.getElementById('specialization').value;
+                const license = document.getElementById('license').value;
+                const experience = document.getElementById('experience').value;
+                const qualifications = document.getElementById('qualifications').value;
+                
+                if (!specialization || !license || !experience || !qualifications) {
+                    alert("Please fill in all counsellor-specific fields!");
+                    return;
+                }
+            }
+
+            // Create user with Firebase Authentication
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Prepare user data for Firestore
+                    const userData = {
+                        userType: userType,
+                        name: fullName,
+                        email: email,
+                        phone: phone,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // Add user-specific fields
+                    if (userType === 'patient') {
+                        userData.condition = document.getElementById('disease').value;
+                        userData.age = parseInt(document.getElementById('age').value);
+                        userData.emergencyContact = document.getElementById('emergencyContact').value;
+                    } else if (userType === 'counsellor') {
+                        userData.specialization = document.getElementById('specialization').value;
+                        userData.license = document.getElementById('license').value;
+                        userData.experience = parseInt(document.getElementById('experience').value);
+                        userData.qualifications = document.getElementById('qualifications').value;
+                    }
+
+                    // Save to Firestore
+                    return db.collection('users').doc(user.uid).set(userData);
+                })
+                .then(() => {
+                    alert("Account created successfully! You are now logged in.");
+                    
+                    // Store user data in localStorage
+                    const currentUser = {
+                        uid: auth.currentUser.uid,
+                        userType: userType,
+                        name: fullName,
+                        email: email,
+                        phone: phone
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    // Redirect based on user type
+                    if (userType === 'patient') {
+                        window.location.href = 'patient-dashboard.html';
+                    } else {
+                        window.location.href = 'counsellor-dashboard.html';
+                    }
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
+        });
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html> 
